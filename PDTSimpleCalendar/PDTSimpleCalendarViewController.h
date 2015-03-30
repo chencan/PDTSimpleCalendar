@@ -35,6 +35,8 @@
  *  You can pass every `NSDate`, if the lastDate is not the last day of its month, the following days will be automatically disabled.
  */
 @property (nonatomic, strong) NSDate *lastDate;
+@property (nonatomic, assign) NSUInteger lastDateOffsetYear;
+@property (nonatomic, assign) NSUInteger lastDateOffsetMonth;
 
 /**
  *  Selected date displayed by the calendar.

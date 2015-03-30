@@ -155,7 +155,8 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     if (!_lastDate) {
         NSDateComponents *offsetComponents = [[NSDateComponents alloc] init];
-        offsetComponents.year = 1;
+        offsetComponents.year = self.lastDateOffsetYear;
+        offsetComponents.month = self.lastDateOffsetMonth;
         offsetComponents.day = -1;
         [self setLastDate:[self.calendar dateByAddingComponents:offsetComponents toDate:self.firstDateMonth options:0]];
     }
