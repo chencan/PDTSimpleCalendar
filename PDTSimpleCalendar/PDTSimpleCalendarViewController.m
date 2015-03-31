@@ -474,7 +474,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 
 - (BOOL)isSelectedDate:(NSDate *)date
 {
-    if (!self.selectedDate) {
+    if (!self.selectedDate && !self.selectedDateArray) {
         return NO;
     }
     BOOL isSelected = NO;
