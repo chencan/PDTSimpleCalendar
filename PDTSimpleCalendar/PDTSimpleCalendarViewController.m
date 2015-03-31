@@ -477,7 +477,18 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (!self.selectedDate) {
         return NO;
     }
-    return [self clampAndCompareDate:date withReferenceDate:self.selectedDate];
+    BOOL isSelected = NO;
+    if (self.selectedDate) {
+        isSelected = [self clampAndCompareDate:date withReferenceDate:self.selectedDate];
+    } else if (self.selectedDateArray) {
+        for (NSDate *temp in self.selectedDateArray) {
+            isSelected = [self clampAndCompareDate:date withReferenceDate:temp];
+            if (isSelected) {
+                break;
+            }
+        }
+    }
+    return isSelected;
 }
 
 - (BOOL)isEnabledDate:(NSDate *)date

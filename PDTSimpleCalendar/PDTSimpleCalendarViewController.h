@@ -44,6 +44,7 @@
  *  You need to manually call scrollToSelectedDate:(BOOL)animated if you want this behavior.
  */
 @property (nonatomic, strong) NSDate *selectedDate;
+@property (nonatomic, strong) NSArray *selectedDateArray;
 
 /** @name Customizing Appearance */
 
