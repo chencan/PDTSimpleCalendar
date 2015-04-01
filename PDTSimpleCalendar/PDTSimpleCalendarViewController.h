@@ -15,6 +15,9 @@
  */
 @interface PDTSimpleCalendarViewController : UICollectionViewController <UICollectionViewDelegateFlowLayout>
 
+
+@property (nonatomic, assign) BOOL selectable;
+@property (nonatomic, assign) BOOL multiSelectable;
 /** @name Calendar Setup */
 
 /**
@@ -44,7 +47,7 @@
  *  You need to manually call scrollToSelectedDate:(BOOL)animated if you want this behavior.
  */
 @property (nonatomic, strong) NSDate *selectedDate;
-@property (nonatomic, strong) NSArray *selectedDateArray;
+@property (nonatomic, strong) NSMutableArray *selectedDateArray;
 
 /** @name Customizing Appearance */
 

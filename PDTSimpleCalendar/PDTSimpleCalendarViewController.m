@@ -46,12 +46,12 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     //Force the creation of the view with the pre-defined Flow Layout.
     //Still possible to define a custom Flow Layout, if needed by using initWithCollectionViewLayout:
-    self = [super initWithCollectionViewLayout:[[PDTSimpleCalendarViewFlowLayout alloc] init]];
+    self = [self initWithCollectionViewLayout:[[PDTSimpleCalendarViewFlowLayout alloc] init]];
     if (self) {
         // Custom initialization
-        [self simpleCalendarCommonInit];
+        //        [self simpleCalendarCommonInit];
     }
-
+    
     return self;
 }
 
@@ -59,10 +59,10 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     //Force the creation of the view with the pre-defined Flow Layout.
     //Still possible to define a custom Flow Layout, if needed by using initWithCollectionViewLayout:
-    self = [super initWithCollectionViewLayout:[[PDTSimpleCalendarViewFlowLayout alloc] init]];
+    self = [self initWithCollectionViewLayout:[[PDTSimpleCalendarViewFlowLayout alloc] init]];
     if (self) {
         // Custom initialization
-        [self simpleCalendarCommonInit];
+        //        [self simpleCalendarCommonInit];
     }
     
     return self;
@@ -74,7 +74,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (self) {
         [self simpleCalendarCommonInit];
     }
-
+    
     return self;
 }
 
@@ -84,6 +84,10 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     self.backgroundColor = [UIColor whiteColor];
     self.overlayTextColor = [UIColor blackColor];
     self.daysPerWeek = 7;
+    
+    self.selectedDateArray = [NSMutableArray array];
+    self.selectable = YES;
+    self.multiSelectable = NO;
 }
 
 #pragma mark - View Lifecycle
@@ -91,7 +95,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-
+    
     if (self.selectedDate) {
         [self.collectionViewLayout invalidateLayout];
     }
@@ -132,7 +136,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
         components.day = 1;
         _firstDate = [self.calendar dateFromComponents:components];
     }
-
+    
     return _firstDate;
 }
 
@@ -147,7 +151,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     NSDateComponents *components = [self.calendar components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay
                                                     fromDate:self.firstDate];
     components.day = 1;
-
+    
     return [self.calendar dateFromComponents:components];
 }
 
@@ -160,7 +164,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
         offsetComponents.day = -1;
         [self setLastDate:[self.calendar dateByAddingComponents:offsetComponents toDate:self.firstDateMonth options:0]];
     }
-
+    
     return _lastDate;
 }
 
@@ -175,7 +179,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     NSDateComponents *components = [self.calendar components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay fromDate:self.lastDate];
     components.month++;
     components.day = 0;
-
+    
     return [self.calendar dateFromComponents:components];
 }
 
@@ -185,26 +189,26 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (!newSelectedDate) {
         [[self cellForItemAtDate:_selectedDate] setSelected:NO];
         _selectedDate = newSelectedDate;
-
+        
         return;
     }
-
+    
     //Test if selectedDate between first & last date
     NSDate *startOfDay = [self clampDate:newSelectedDate toComponents:NSDayCalendarUnit|NSMonthCalendarUnit|NSYearCalendarUnit];
     if (([startOfDay compare:self.firstDateMonth] == NSOrderedAscending) || ([startOfDay compare:self.lastDateMonth] == NSOrderedDescending)) {
         //the newSelectedDate is not between first & last date of the calendar, do nothing.
         return;
     }
-
-
+    
+    
     [[self cellForItemAtDate:_selectedDate] setSelected:NO];
     [[self cellForItemAtDate:startOfDay] setSelected:YES];
-
+    
     _selectedDate = startOfDay;
-
+    
     NSIndexPath *indexPath = [self indexPathForCellAtDate:_selectedDate];
     [self.collectionView reloadItemsAtIndexPaths:@[ indexPath ]];
-
+    
     //Notify the delegate
     if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:didSelectDate:)]) {
         [self.delegate simpleCalendarViewController:self didSelectDate:self.selectedDate];
@@ -232,11 +236,11 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     @try {
         NSIndexPath *selectedDateIndexPath = [self indexPathForCellAtDate:date];
-
+        
         if (![[self.collectionView indexPathsForVisibleItems] containsObject:selectedDateIndexPath]) {
             //First, tried to use [self.collectionView layoutAttributesForSupplementaryElementOfKind:UICollectionElementKindSectionHeader atIndexPath:selectedDateIndexPath]; but it causes the header to be redraw multiple times (X each time you use scrollToDate:)
             //TODO: Investigate & eventually file a radar.
-
+            
             NSIndexPath *sectionIndexPath = [NSIndexPath indexPathForItem:0 inSection:selectedDateIndexPath.section];
             UICollectionViewLayoutAttributes *sectionLayoutAttributes = [self.collectionView layoutAttributesForItemAtIndexPath:sectionIndexPath];
             CGPoint origin = sectionLayoutAttributes.frame.origin;
@@ -267,29 +271,32 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-
+    
     //Configure the Collection View
     [self.collectionView registerClass:[PDTSimpleCalendarViewCell class] forCellWithReuseIdentifier:PDTSimpleCalendarViewCellIdentifier];
     [self.collectionView registerClass:[PDTSimpleCalendarViewHeader class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:PDTSimpleCalendarViewHeaderIdentifier];
-
+    
     self.collectionView.delegate = self;
     self.collectionView.dataSource = self;
     [self.collectionView setBackgroundColor:self.backgroundColor];
-
+    
     //Configure the Overlay View
     [self.overlayView setBackgroundColor:[self.backgroundColor colorWithAlphaComponent:0.90]];
     [self.overlayView setFont:[UIFont boldSystemFontOfSize:PDTSimpleCalendarOverlaySize]];
     [self.overlayView setTextColor:self.overlayTextColor];
     [self.overlayView setAlpha:0.0];
     [self.overlayView setTextAlignment:NSTextAlignmentCenter];
-
+    
     [self.view addSubview:self.overlayView];
     [self.overlayView setTranslatesAutoresizingMaskIntoConstraints:NO];
     NSDictionary *viewsDictionary = @{@"overlayView": self.overlayView};
     NSDictionary *metricsDictionary = @{@"overlayViewHeight": @(PDTSimpleCalendarFlowLayoutHeaderHeight)};
-
+    
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[overlayView]|" options:NSLayoutFormatAlignAllTop metrics:nil views:viewsDictionary]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[overlayView(==overlayViewHeight)]" options:NSLayoutFormatAlignAllTop metrics:metricsDictionary views:viewsDictionary]];
+    
+    self.collectionView.allowsMultipleSelection = self.multiSelectable;
+    self.collectionView.allowsSelection = self.selectable;
 }
 
 #pragma mark - Rotation Handling
@@ -312,7 +319,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     NSDate *firstOfMonth = [self firstOfMonthForSection:section];
     NSRange rangeOfWeeks = [self.calendar rangeOfUnit:NSWeekCalendarUnit inUnit:NSMonthCalendarUnit forDate:firstOfMonth];
-
+    
     //We need the number of calendar weeks for the full months (it will maybe include previous month and next months cells)
     return (rangeOfWeeks.length * self.daysPerWeek);
 }
@@ -322,52 +329,52 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     PDTSimpleCalendarViewCell *cell = [self.collectionView dequeueReusableCellWithReuseIdentifier:PDTSimpleCalendarViewCellIdentifier
                                                                                      forIndexPath:indexPath];
-
+    
     cell.delegate = self;
     
     NSDate *firstOfMonth = [self firstOfMonthForSection:indexPath.section];
     NSDate *cellDate = [self dateForCellAtIndexPath:indexPath];
-
+    
     NSDateComponents *cellDateComponents = [self.calendar components:NSDayCalendarUnit|NSMonthCalendarUnit fromDate:cellDate];
     NSDateComponents *firstOfMonthsComponents = [self.calendar components:NSMonthCalendarUnit fromDate:firstOfMonth];
-
+    
     BOOL isToday = NO;
     BOOL isSelected = NO;
     BOOL isCustomDate = NO;
-
+    
     if (cellDateComponents.month == firstOfMonthsComponents.month) {
         isSelected = ([self isSelectedDate:cellDate] && (indexPath.section == [self sectionForDate:cellDate]));
         isToday = [self isTodayDate:cellDate];
         [cell setDate:cellDate calendar:self.calendar];
-
+        
         //Ask the delegate if this date should have specific colors.
         if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:shouldUseCustomColorsForDate:)]) {
             isCustomDate = [self.delegate simpleCalendarViewController:self shouldUseCustomColorsForDate:cellDate];
         }
-
-
+        
+        
     } else {
         [cell setDate:nil calendar:nil];
     }
-
+    
     if (isToday) {
         [cell setIsToday:isToday];
     }
-
+    
     if (isSelected) {
         [cell setSelected:isSelected];
     }
-
+    
     //If the current Date is not enabled, or if the delegate explicitely specify custom colors
     if (![self isEnabledDate:cellDate] || isCustomDate) {
         [cell refreshCellColors];
     }
-
+    
     //We rasterize the cell for performances purposes.
     //The circle background is made using roundedCorner which is a super expensive operation, specially with a lot of items on the screen to display (like we do)
     cell.layer.shouldRasterize = YES;
     cell.layer.rasterizationScale = [UIScreen mainScreen].scale;
-
+    
     return cell;
 }
 
@@ -377,21 +384,36 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     NSDate *firstOfMonth = [self firstOfMonthForSection:indexPath.section];
     NSDate *cellDate = [self dateForCellAtIndexPath:indexPath];
-
+    
     //We don't want to select Dates that are "disabled"
     if (![self isEnabledDate:cellDate]) {
         return NO;
     }
-
+    
     NSDateComponents *cellDateComponents = [self.calendar components:NSDayCalendarUnit|NSMonthCalendarUnit fromDate:cellDate];
     NSDateComponents *firstOfMonthsComponents = [self.calendar components:NSMonthCalendarUnit fromDate:firstOfMonth];
-
+    
     return (cellDateComponents.month == firstOfMonthsComponents.month);
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    self.selectedDate = [self dateForCellAtIndexPath:indexPath];
+    
+    if (self.selectable) {
+        NSDate *date = [self dateForCellAtIndexPath:indexPath];
+        if (self.multiSelectable) {
+            if ([self.selectedDateArray containsObject:date]) {
+                [self.selectedDateArray removeObject:date];
+                [[self cellForItemAtDate:date] setSelected:NO];
+            } else {
+                [self.selectedDateArray addObject:date];
+                [[self cellForItemAtDate:date] setSelected:YES];
+                
+            }
+        } else {
+            self.selectedDate = date;
+        }
+    }
 }
 
 
@@ -399,15 +421,15 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     if (kind == UICollectionElementKindSectionHeader) {
         PDTSimpleCalendarViewHeader *headerView = [self.collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:PDTSimpleCalendarViewHeaderIdentifier forIndexPath:indexPath];
-
+        
         headerView.titleLabel.text = [self.headerDateFormatter stringFromDate:[self firstOfMonthForSection:indexPath.section]].uppercaseString;
-
+        
         headerView.layer.shouldRasterize = YES;
         headerView.layer.rasterizationScale = [UIScreen mainScreen].scale;
-
+        
         return headerView;
     }
-
+    
     return nil;
 }
 
@@ -416,7 +438,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     CGFloat itemWidth = floorf(CGRectGetWidth(self.collectionView.bounds) / self.daysPerWeek);
-
+    
     return CGSizeMake(itemWidth, itemWidth);
 }
 
@@ -447,7 +469,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     //indexPaths is not sorted
     NSArray *sortedIndexPaths = [indexPaths sortedArrayUsingSelector:@selector(compare:)];
     NSIndexPath *firstIndexPath = [sortedIndexPaths firstObject];
-
+    
     self.overlayView.text = [self.headerDateFormatter stringFromDate:[self firstOfMonthForSection:firstIndexPath.section]];
 }
 
@@ -497,11 +519,11 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (([clampedDate compare:self.firstDate] == NSOrderedAscending) || ([clampedDate compare:self.lastDate] == NSOrderedDescending)) {
         return NO;
     }
-
+    
     if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:isEnabledDate:)]) {
         return [self.delegate simpleCalendarViewController:self isEnabledDate:date];
     }
-
+    
     return YES;
 }
 
@@ -509,7 +531,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     NSDate *refDate = [self clampDate:referenceDate toComponents:(NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit)];
     NSDate *clampedDate = [self clampDate:date toComponents:(NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit)];
-
+    
     return [refDate isEqualToDate:clampedDate];
 }
 
@@ -519,7 +541,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
 {
     NSDateComponents *offset = [NSDateComponents new];
     offset.month = section;
-
+    
     return [self.calendar dateByAddingComponents:offset toDate:self.firstDateMonth options:0];
 }
 
@@ -535,7 +557,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     NSInteger ordinalityOfFirstDay = [self.calendar ordinalityOfUnit:NSDayCalendarUnit inUnit:NSWeekCalendarUnit forDate:firstOfMonth];
     NSDateComponents *dateComponents = [NSDateComponents new];
     dateComponents.day = (1 - ordinalityOfFirstDay) + indexPath.item;
-
+    
     return [self.calendar dateByAddingComponents:dateComponents toDate:firstOfMonth options:0];
 }
 
@@ -545,17 +567,17 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (!date) {
         return nil;
     }
-
+    
     NSInteger section = [self sectionForDate:date];
-
+    
     NSDate *firstOfMonth = [self firstOfMonthForSection:section];
     NSInteger ordinalityOfFirstDay = [self.calendar ordinalityOfUnit:NSDayCalendarUnit inUnit:NSWeekCalendarUnit forDate:firstOfMonth];
-
-
+    
+    
     NSDateComponents *dateComponents = [self.calendar components:NSDayCalendarUnit fromDate:date];
     NSDateComponents *firstOfMonthComponents = [self.calendar components:NSDayCalendarUnit fromDate:firstOfMonth];
     NSInteger item = (dateComponents.day - firstOfMonthComponents.day) - (1 - ordinalityOfFirstDay);
-
+    
     return [NSIndexPath indexPathForItem:item inSection:section];
 }
 
@@ -572,12 +594,12 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (![self isEnabledDate:date]) {
         return YES;
     }
-
+    
     //Otherwise we ask the delegate
     if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:shouldUseCustomColorsForDate:)]) {
         return [self.delegate simpleCalendarViewController:self shouldUseCustomColorsForDate:date];
     }
-
+    
     return NO;
 }
 
@@ -586,11 +608,11 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (![self isEnabledDate:date]) {
         return cell.circleDefaultColor;
     }
-
+    
     if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:circleColorForDate:)]) {
         return [self.delegate simpleCalendarViewController:self circleColorForDate:date];
     }
-
+    
     return nil;
 }
 
@@ -599,11 +621,11 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     if (![self isEnabledDate:date]) {
         return cell.textDisabledColor;
     }
-
+    
     if ([self.delegate respondsToSelector:@selector(simpleCalendarViewController:textColorForDate:)]) {
         return [self.delegate simpleCalendarViewController:self textColorForDate:date];
     }
-
+    
     return nil;
 }
 
