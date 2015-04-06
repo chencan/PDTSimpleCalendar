@@ -188,6 +188,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     //if newSelectedDate is nil, unselect the current selected cell
     if (!newSelectedDate) {
         [[self cellForItemAtDate:_selectedDate] setSelected:NO];
+        [self.collectionView deselectItemAtIndexPath:[self indexPathForCellAtDate:_selectedDate] animated:NO];
         _selectedDate = newSelectedDate;
         
         return;
@@ -202,7 +203,9 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     
     
     [[self cellForItemAtDate:_selectedDate] setSelected:NO];
+    [self.collectionView deselectItemAtIndexPath:[self indexPathForCellAtDate:_selectedDate] animated:NO];
     [[self cellForItemAtDate:startOfDay] setSelected:YES];
+    [self.collectionView selectItemAtIndexPath:[self indexPathForCellAtDate:startOfDay] animated:NO scrollPosition:UICollectionViewScrollPositionNone];
     
     _selectedDate = startOfDay;
     
@@ -363,6 +366,7 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     
     if (isSelected) {
         [cell setSelected:isSelected];
+        [self.collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone];
     }
     
     //If the current Date is not enabled, or if the delegate explicitely specify custom colors
@@ -396,6 +400,20 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
     return (cellDateComponents.month == firstOfMonthsComponents.month);
 }
 
+- (void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.selectable) {
+        NSDate *date = [self dateForCellAtIndexPath:indexPath];
+        if (self.multiSelectable) {
+            if ([self.selectedDateArray containsObject:date]) {
+                [self.selectedDateArray removeObject:date];
+                [[self cellForItemAtDate:date] setSelected:NO];
+                [self.collectionView deselectItemAtIndexPath:indexPath animated:NO];
+            }
+        }
+    }
+}
+
+
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     
@@ -405,9 +423,11 @@ static NSString *PDTSimpleCalendarViewHeaderIdentifier = @"com.producteev.collec
             if ([self.selectedDateArray containsObject:date]) {
                 [self.selectedDateArray removeObject:date];
                 [[self cellForItemAtDate:date] setSelected:NO];
+                [self.collectionView deselectItemAtIndexPath:indexPath animated:NO];
             } else {
                 [self.selectedDateArray addObject:date];
                 [[self cellForItemAtDate:date] setSelected:YES];
+                [self.collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone];
                 
             }
         } else {
