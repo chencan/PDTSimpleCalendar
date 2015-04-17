@@ -41,6 +41,7 @@
 @property (nonatomic, assign) NSUInteger lastDateOffsetYear;
 @property (nonatomic, assign) NSUInteger lastDateOffsetMonth;
 @property (nonatomic, assign) NSUInteger lastDateOffsetDay;
+@property (nonatomic, assign) BOOL notUseFirstDateMonthWhenSetLastDate;
 
 /**
  *  Selected date displayed by the calendar.
