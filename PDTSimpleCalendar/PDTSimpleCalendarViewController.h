@@ -40,6 +40,7 @@
 @property (nonatomic, strong) NSDate *lastDate;
 @property (nonatomic, assign) NSUInteger lastDateOffsetYear;
 @property (nonatomic, assign) NSUInteger lastDateOffsetMonth;
+@property (nonatomic, assign) NSUInteger lastDateOffsetDay;
 
 /**
  *  Selected date displayed by the calendar.
